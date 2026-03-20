@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cirrus Renewable Energy - Field Service Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8; /* Softer, slightly richer blue-gray background */
+            color: #0F172A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .step-active {
+            border-left-color: #0284C7; /* Stronger blue */
+            background-color: #F0F9FF;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .step-inactive {
+            border-left-color: #E2E8F0;
+            background-color: #FFFFFF;
+        }
+        .step-inactive:hover {
+            background-color: #F8FAFC;
+            border-left-color: #CBD5E1;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+        }
+        
+        /* Dispatcher Console Styles */
+        .gantt-grid {
+            background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px);
+            background-size: 11.11% 100%; /* 9 hours = 9 columns = 100/9 */
+        }
+        .gantt-block {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .gantt-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            filter: brightness(1.05);
+        }
+        .gantt-block.focus-pulse {
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* Modal Styles */
+        #appointment-modal {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- Chosen Palette: Salesforce Inspired (Deep Blues, Bright Cloud Whites, Clear Status Colors: Emerald/Completed, Amber/Scheduled, Purple/Dispatched) -->
+<!-- Application Structure Plan: Linear flow enhanced with an interactive simulated tool. Header -> Journey Sequence -> NEW Interactive Dispatcher Console (Gantt) -> Business Impact Dashboard. The Gantt chart provides a tangible "wow" factor by simulating the actual SFS interface users saw in the video, bridging the gap between narrative and product. -->
+<!-- Visualization & Content Choices: Added a custom-built HTML/CSS Gantt Chart using absolute positioning to simulate the Salesforce Dispatcher Console. It uses JavaScript to render appointments and handle click events, popping up a detailed modal. This removes the need for SVG/Iframes while delivering a high-fidelity interactive experience. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <header class="bg-gradient-to-r from-[#032D60] via-[#0A417A] to-[#032D60] text-white py-14 px-6 shadow-lg relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]"></div> <!-- Tiny dot pattern for texture, not an image/svg graphic per se, just CSS background -->
+        <div class="max-w-6xl mx-auto relative z-10">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="bg-blue-500/30 text-blue-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-400/30">Field Service Prototype</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Powering the Frontline</h1>
+            <p class="text-xl text-blue-100 max-w-3xl leading-relaxed font-light">Interactive Dispatch & Journey Simulation for <span class="text-white font-semibold border-b border-blue-400">Cirrus Renewable Energy</span>.</p>
+            
+            <div class="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20 hover:bg-white/15 transition-colors">
+                    <div class="text-blue-200 text-xs uppercase tracking-wider mb-1 font-semibold">Customer</div>
+                    <div class="font-medium text-lg">Lauren Bailey, SVP</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20 hover:bg-white/15 transition-colors">
+                    <div class="text-blue-200 text-xs uppercase tracking-wider mb-1 font-semibold">Asset</div>
+                    <div class="font-medium text-lg">NextGen 1 kW Turbine</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20 hover:bg-white/15 transition-colors">
+                    <div class="text-blue-200 text-xs uppercase tracking-wider mb-1 font-semibold">Core Issue</div>
+                    <div class="font-medium text-amber-300 text-lg flex items-center"><span class="mr-2">⚠️</span> Power Drop</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20 hover:bg-white/15 transition-colors">
+                    <div class="text-blue-200 text-xs uppercase tracking-wider mb-1 font-semibold">Objective</div>
+                    <div class="font-medium text-emerald-300 text-lg flex items-center"><span class="mr-2">🎯</span> First-Time Fix</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 space-y-20">
+
+        <!-- THE JOURNEY SECTION -->
+        <section id="journey-section">
+            <div class="mb-10">
+                <h2 class="text-3xl font-extrabold text-slate-800 mb-4 flex items-center tracking-tight">
+                    <span class="text-3xl mr-3 bg-blue-100 rounded-lg p-1.5 leading-none">🔄</span> The Connected Service Journey
+                </h2>
+                <p class="text-slate-600 text-lg leading-relaxed max-w-4xl">
+                    Explore the end-to-end lifecycle of a field service request. See how Cirrus uses AI, mobile tools, and intelligent dispatching to transform a reactive breakdown into a seamless, high-efficiency repair.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[600px]">
+                <div class="lg:col-span-4 flex flex-col space-y-3 overflow-y-auto pr-2" id="journey-nav">
+                    <!-- Nav populated by JS -->
+                </div>
+
+                <div class="lg:col-span-8 glass-panel rounded-2xl p-8 flex flex-col transition-all duration-300 h-full overflow-y-auto relative">
+                    <div id="journey-content" class="flex-grow flex flex-col h-full">
+                        <!-- Content populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: INTERACTIVE DISPATCHER CONSOLE -->
+        <section id="dispatcher-console-section" class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-800 px-6 py-4 flex items-center justify-between border-b border-slate-700">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center tracking-wide">
+                        <span class="mr-3">🗺️</span> Dispatcher Console Simulation
+                    </h2>
+                    <p class="text-sm text-slate-300 mt-1">Interactive Gantt Chart &middot; Territory: Dublin &middot; Dec 22, 2025</p>
+                </div>
+                <div class="hidden sm:flex gap-3">
+                    <span class="flex items-center text-xs text-slate-300"><div class="w-3 h-3 bg-emerald-500 rounded-sm mr-1.5"></div> Completed</span>
+                    <span class="flex items-center text-xs text-slate-300"><div class="w-3 h-3 bg-blue-500 rounded-sm mr-1.5"></div> In Progress</span>
+                    <span class="flex items-center text-xs text-slate-300"><div class="w-3 h-3 bg-amber-400 rounded-sm mr-1.5"></div> Scheduled</span>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-slate-50">
+                <p class="text-slate-600 mb-6 font-medium text-center bg-blue-50 py-3 rounded-lg border border-blue-100">
+                    👆 <span class="text-blue-700">Interactive:</span> Click on the glowing <strong class="text-amber-600 bg-amber-100 px-2 py-0.5 rounded">Battery Replacement</strong> appointment assigned to Alan Reed to view details and options.
+                </p>
+
+                <!-- Gantt UI -->
+                <div class="border border-slate-300 rounded-xl overflow-x-auto bg-white shadow-inner">
+                    <div class="min-w-[800px]">
+                        <!-- Gantt Header (Time) -->
+                        <div class="flex border-b border-slate-300 bg-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            <div class="w-48 flex-shrink-0 p-3 border-r border-slate-300">Resource</div>
+                            <div class="flex-grow flex relative">
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center">08:00</div>
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center">09:00</div>
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center">10:00</div>
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center">11:00</div>
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center">12:00</div>
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center">13:00</div>
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center">14:00</div>
+                                <div class="flex-1 p-3 border-r border-slate-200/50 text-center text-blue-600 font-bold bg-blue-50/50">15:00</div> <!-- Current Time Indicator -->
+                                <div class="flex-1 p-3 text-center">16:00</div>
+                            </div>
+                        </div>
+
+                        <!-- Gantt Rows Container -->
+                        <div id="gantt-rows-container" class="relative">
+                            <!-- Rows populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- IMPACT SECTION -->
+        <section id="impact-section" class="bg-white rounded-2xl shadow-xl p-8 sm:p-12 border border-slate-200">
+            <div class="mb-10 text-center max-w-3xl mx-auto">
+                <h2 class="text-3xl font-extrabold text-slate-800 mb-4 flex items-center justify-center tracking-tight">
+                    <span class="text-3xl mr-3 bg-emerald-100 rounded-lg p-1.5 leading-none">📈</span> Measurable Business Impact
+                </h2>
+                <p class="text-slate-600 text-lg leading-relaxed">
+                    Transitioning to a connected, AI-driven Field Service platform yields significant operational improvements. This dashboard visualizes the core metric enhancements achieved by Cirrus.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 mt-12">
+                <div class="flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-slate-800">Performance Uplift</h3>
+                        <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded uppercase tracking-wide">+ YoY Growth</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-6 w-full text-left">Percentage increases across key performance indicators post-implementation.</p>
+                    <div class="chart-container w-full bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-slate-800">Routing Optimization</h3>
+                        <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded uppercase tracking-wide">Efficiency</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-6 w-full text-left">Reduction in average travel time per job via AI-driven scheduling algorithms.</p>
+                    <div class="chart-container w-full bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <canvas id="travelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#0F172A] text-slate-400 py-10 text-center mt-auto border-t border-slate-800">
+        <p class="text-sm font-medium tracking-wide">Interactive Prototype &middot; Salesforce Field Service Simulation &middot; Cirrus Renewable Energy</p>
+    </footer>
+
+    <!-- MODAL FOR DISPATCHER CONSOLE -->
+    <div id="appointment-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform scale-95 transition-all" id="modal-content">
+            <div class="bg-slate-800 p-4 flex justify-between items-center border-b border-slate-700">
+                <h3 class="text-white font-bold flex items-center" id="modal-title">
+                    <span class="bg-amber-500 text-slate-900 text-xs px-2 py-1 rounded mr-3 uppercase tracking-wider font-extrabold" id="modal-status">Status</span>
+                    <span id="modal-sa-number">SA-0000</span>
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Subject</div>
+                    <div class="text-lg font-bold text-slate-800" id="modal-subject">Battery Replacement</div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Resource</div>
+                        <div class="font-medium text-slate-800 flex items-center mt-1"><span class="mr-1.5">👨‍🔧</span> <span id="modal-resource">Name</span></div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Account</div>
+                        <div class="font-medium text-slate-800 flex items-center mt-1"><span class="mr-1.5">🏢</span> Cirrus Energy</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Start Time</div>
+                        <div class="font-medium text-slate-800 mt-1" id="modal-start">00:00</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">End Time</div>
+                        <div class="font-medium text-slate-800 mt-1" id="modal-end">00:00</div>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200">
+                    <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2">Dispatcher Actions</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Edit</button>
+                        <button class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Change Status</button>
+                        <button class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Get Candidates</button>
+                        <button class="bg-blue-600 border border-blue-600 text-white hover:bg-blue-700 py-2 rounded text-sm font-medium transition-colors">View on Map</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JOURNEY DATA & LOGIC ---
+        const journeySteps = [
+            {
+                id: 'intake', icon: '📞', title: 'Intake & Case Creation', subtitle: 'Customer initiates contact via Portal',
+                content: `
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-700 rounded-xl flex items-center justify-center text-2xl mr-4 shadow-sm border border-blue-200">📞</div>
+                        <h3 class="text-2xl font-extrabold text-slate-800">Digital Intake</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 text-lg">Lauren experiences a drop in power generation and logs into the Cirrus Customer Portal to report the issue.</p>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                        <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 font-bold text-slate-700 flex justify-between items-center">
+                            <span>Case Details Submitted</span>
+                            <span class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded font-mono">Case #00001371</span>
+                        </div>
+                        <div class="p-0">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <tbody class="divide-y divide-slate-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700 bg-slate-50/50 w-1/3">Subject</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">My turbine is not generating enough power</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700 bg-slate-50/50">Product Family</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800">Wind Turbines</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700 bg-slate-50/50">Priority</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-rose-100 text-rose-700 border border-rose-200">High Priority</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 border-l-4 border-indigo-500 p-5 rounded-r-lg mt-auto shadow-sm">
+                        <div class="flex">
+                            <div class="flex-shrink-0 text-2xl">🧠</div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider">Einstein Insight Applied</h3>
+                                <p class="text-sm text-indigo-800 mt-1 leading-relaxed">Based on historical telemetry and case data, Einstein automatically classifies the case and suggests <strong class="font-extrabold bg-indigo-100 px-1 rounded">"Battery Failure"</strong> as the most probable root cause.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'vra', icon: '🔍', title: 'Visual Remote Assistant', subtitle: 'Pre-truck-roll diagnostic confirmation',
+                content: `
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-xl flex items-center justify-center text-2xl mr-4 shadow-sm border border-teal-200">🔍</div>
+                        <h3 class="text-2xl font-extrabold text-slate-800">Visual Diagnostics (VRA)</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 text-lg">To prevent an unnecessary or under-equipped truck roll, the support agent initiates a live video session with the customer.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hover:border-teal-300 transition-colors group">
+                            <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">📱</div>
+                            <h4 class="font-bold text-slate-800 mb-2">Frictionless Connection</h4>
+                            <p class="text-sm text-slate-600">Agent sends a secure SMS link. Lauren clicks and opens her smartphone camera via the mobile browser. Zero app installation required.</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-teal-500 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 text-6xl opacity-10">👁️‍🗨️</div>
+                            <div class="text-3xl mb-3">👁️‍🗨️</div>
+                            <h4 class="font-bold text-slate-800 mb-2">AI OCR Scanning</h4>
+                            <p class="text-sm text-slate-600">The agent freezes the video feed and uses OCR to instantly capture the serial number <code class="bg-slate-100 px-1.5 py-0.5 rounded text-teal-700 font-mono font-bold border border-slate-200">21BZ0206A</code> directly from the housing.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[#0F172A] text-white p-5 rounded-xl flex items-center justify-between mt-auto shadow-md">
+                        <div>
+                            <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-1">Diagnostic Outcome</div>
+                            <div class="text-lg font-bold text-emerald-400 flex items-center">Battery Replacement Confirmed</div>
+                        </div>
+                        <div class="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/50">
+                            <span class="text-emerald-400 font-bold text-xl">✓</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'workorder', icon: '🧾', title: 'Work Order & Scoping', subtitle: 'Translating diagnosis into actionable work',
+                content: `
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-2xl mr-4 shadow-sm border border-amber-200">🧾</div>
+                        <h3 class="text-2xl font-extrabold text-slate-800">Intelligent Scoping</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 text-lg">With the issue confirmed, the agent converts the Case into a structured Work Order. Applying the correct Work Type acts as a master template.</p>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 relative overflow-hidden mb-6">
+                        <div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-extrabold px-4 py-1.5 rounded-bl-xl tracking-wider shadow-sm">TEMPLATE APPLIED</div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3 flex items-center">
+                            <span class="text-amber-500 mr-2">⚙️</span> Work Type: Battery Replacement
+                        </h4>
+                        
+                        <div class="space-y-5">
+                            <div class="flex items-start bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <div class="text-xl mr-4 mt-0.5 opacity-80">⏱️</div>
+                                <div>
+                                    <div class="font-bold text-slate-500 text-xs uppercase tracking-wider mb-1">Estimated Duration</div>
+                                    <div class="text-slate-900 font-bold">1.0 Hour</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <div class="text-xl mr-4 mt-0.5 opacity-80">🎓</div>
+                                <div>
+                                    <div class="font-bold text-slate-500 text-xs uppercase tracking-wider mb-1">Required Skills Match</div>
+                                    <div class="flex flex-wrap gap-2 mt-1">
+                                        <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-md font-bold border border-blue-200 shadow-sm">Electrical Specialist</span>
+                                        <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-md font-bold border border-blue-200 shadow-sm">Wind Turbine L2</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <div class="text-xl mr-4 mt-0.5 opacity-80">📦</div>
+                                <div>
+                                    <div class="font-bold text-slate-500 text-xs uppercase tracking-wider mb-1">Products Required (Van Stock)</div>
+                                    <ul class="text-slate-800 text-sm mt-1 space-y-1 font-medium">
+                                        <li class="flex items-center"><span class="text-amber-500 mr-2 text-lg">•</span> 1x Low Capacity Battery</li>
+                                        <li class="flex items-center"><span class="text-amber-500 mr-2 text-lg">•</span> 2x Connector Cables</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'dispatch', icon: '📅', title: 'Scheduling & Dispatch', subtitle: 'Agentforce matching and routing',
+                content: `
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center text-2xl mr-4 shadow-sm border border-purple-200">📅</div>
+                        <h3 class="text-2xl font-extrabold text-slate-800">Dynamic Dispatching</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 text-lg">The scheduling engine balances customer constraints, technician skills, inventory proximity, and routing geometry to find the perfect appointment.</p>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-start hover:border-purple-300 transition-colors">
+                            <div class="text-3xl mr-4 bg-yellow-50 p-2 rounded-lg">⭐</div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Golden Slots Optimization</h4>
+                                <p class="text-sm text-slate-600 mt-1 leading-relaxed">System identifies "Customer First" slots that minimize whitespace on the Gantt chart while respecting Lauren's preferred windows.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-purple-50 to-white p-5 rounded-xl border border-purple-100 shadow-sm flex items-start">
+                            <div class="text-3xl mr-4 bg-purple-100 p-2 rounded-lg border border-purple-200">🤖</div>
+                            <div>
+                                <h4 class="font-bold text-purple-900">Agentforce Crisis Rebooking</h4>
+                                <p class="text-sm text-purple-800 mt-1 leading-relaxed">If a technician falls ill, Agentforce intercepts. It auto-messages Lauren via WhatsApp, offering dynamic new slots. Lauren replies <span class="font-bold bg-white px-1 rounded">"Tomorrow after 2 PM"</span> and the schedule self-heals instantly.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-800 p-4 rounded-xl text-center mt-auto border border-slate-700 shadow-lg">
+                        <div class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Optimized Resource Assignment</div>
+                        <div class="flex items-center justify-center">
+                            <div class="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center mr-3 border-2 border-slate-500 text-xl">👨‍🔧</div>
+                            <span class="font-bold text-white text-xl tracking-wide">Alan Reed</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'mobile', icon: '📲', title: 'Mobile Execution', subtitle: 'Technician app & AI voice-to-text',
+                content: `
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center text-2xl mr-4 shadow-sm border border-rose-200">📲</div>
+                        <h3 class="text-2xl font-extrabold text-slate-800">Technician Experience</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 text-lg">Alan arrives on site. His SFS Mobile App guides him through safety compliance, execution, and inventory tracking without manual data entry.</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 mb-6">
+                        <div class="flex-1 bg-[#1E293B] text-white rounded-2xl p-5 shadow-xl relative border-[6px] border-black">
+                            <div class="absolute top-2 w-16 h-1.5 bg-slate-700 rounded-full left-1/2 transform -translate-x-1/2"></div>
+                            <h4 class="text-blue-400 font-bold text-sm border-b border-slate-700 pb-2 mb-4 mt-5 uppercase tracking-wider flex items-center justify-between">
+                                SFS Mobile 
+                                <span class="text-xs bg-slate-700 text-white px-2 py-0.5 rounded-full">Task List</span>
+                            </h4>
+                            
+                            <ul class="space-y-4 text-sm font-medium">
+                                <li class="flex items-center text-slate-300 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50"><span class="text-emerald-400 mr-3 text-lg">✓</span> Asset History Reviewed</li>
+                                <li class="flex items-center text-slate-300 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50"><span class="text-emerald-400 mr-3 text-lg">✓</span> Safety Insp. (Voice)</li>
+                                <li class="flex items-center text-slate-300 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50"><span class="text-emerald-400 mr-3 text-lg">✓</span> Parts Consumed Logged</li>
+                                <li class="flex items-center bg-blue-900/40 p-3 rounded-lg border border-blue-500/30 text-blue-100">
+                                    <span class="relative flex h-3 w-3 mr-3">
+                                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                      <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                                    </span>
+                                    Pending: Image Capture
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="flex-1 space-y-4 flex flex-col justify-center">
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-2 h-full bg-rose-400"></div>
+                                <h5 class="font-bold text-slate-800 text-sm mb-2 flex items-center"><span class="mr-2 text-xl">🎙️</span> AI Text-to-Form</h5>
+                                <p class="text-sm text-slate-600 italic bg-slate-50 p-2 rounded border border-slate-100">"Job description is battery replacement, high winds present, wearing a hard hat."</p>
+                                <div class="mt-3 text-xs text-rose-600 font-bold bg-rose-50 inline-block px-2 py-1 rounded">↳ Auto-populates 5 safety fields.</div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-2 h-full bg-amber-400"></div>
+                                <h5 class="font-bold text-slate-800 text-sm mb-2 flex items-center"><span class="mr-2 text-xl">📦</span> Inventory Sync</h5>
+                                <p class="text-sm text-slate-600">Alan taps to record consumption. Van stock is decremented instantly in Salesforce, preventing stockouts for future jobs.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'completion', icon: '✅', title: 'Completion & Upsell', subtitle: 'Sign-off and Einstein revenue generation',
+                content: `
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-2xl mr-4 shadow-sm border border-emerald-200">✅</div>
+                        <h3 class="text-2xl font-extrabold text-slate-800">Closure & Revenue</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 text-lg">The job concludes with a seamless customer sign-off, automated reporting, and proactive lead generation fueled by asset intelligence.</p>
+                    
+                    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200 shadow-sm mb-6 relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 text-9xl opacity-5 text-emerald-600">💡</div>
+                        <div class="flex flex-col sm:flex-row gap-6 items-center relative z-10">
+                            <div class="flex-1">
+                                <h4 class="font-extrabold text-emerald-900 mb-2 text-lg flex items-center">
+                                    <span class="mr-2">🧠</span> Einstein Opportunity Detection
+                                </h4>
+                                <p class="text-sm text-emerald-800 leading-relaxed">During closure, Einstein analyzes the installation date of Lauren's broader energy setup. It prompts Alan on-screen: <br><br><span class="italic font-bold bg-white/60 px-2 py-1 rounded inline-block shadow-sm">"Asset aging detected. Ask about Solar Panel upgrade."</span></p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border border-emerald-100 text-center min-w-[160px] transform hover:scale-105 transition-transform">
+                                <div class="text-xs text-slate-400 font-extrabold mb-2 tracking-widest">ACTION TAKEN</div>
+                                <div class="text-3xl mb-1">🤝</div>
+                                <div class="text-emerald-600 font-black text-lg mt-1 border-t border-slate-100 pt-2">Lead Routed</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between border-t border-slate-200 pt-5 mt-auto">
+                        <div class="flex items-center bg-white p-2 rounded-lg shadow-sm border border-slate-100 pr-4">
+                            <div class="text-2xl mr-3 bg-slate-50 p-2 rounded">✍️</div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-sm">Signature Captured</div>
+                                <div class="text-xs text-slate-500 font-medium">Lauren Bailey</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center bg-white p-2 rounded-lg shadow-sm border border-slate-100 pr-4">
+                            <div class="text-2xl mr-3 bg-slate-50 p-2 rounded">📄</div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-sm">Service Report</div>
+                                <div class="text-xs text-slate-500 font-medium">Emailed Automatically</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        let currentStepIndex = 0;
+        const navContainer = document.getElementById('journey-nav');
+        const contentContainer = document.getElementById('journey-content');
+
+        function renderNav() {
+            navContainer.innerHTML = journeySteps.map((step, index) => `
+                <button onclick="selectStep(${index})" class="text-left w-full p-4 rounded-xl border-l-4 transition-all duration-200 flex items-center outline-none ${index === currentStepIndex ? 'step-active' : 'step-inactive border-transparent shadow-sm'}">
+                    <span class="text-2xl mr-4 bg-white shadow-sm rounded-lg p-2 leading-none w-11 h-11 flex items-center justify-center border border-slate-100">${step.icon}</span>
+                    <div>
+                        <h4 class="font-extrabold ${index === currentStepIndex ? 'text-blue-800' : 'text-slate-700'} text-base">${step.title}</h4>
+                        <p class="text-xs ${index === currentStepIndex ? 'text-blue-600 font-medium' : 'text-slate-500'} mt-1 truncate">${step.subtitle}</p>
+                    </div>
+                </button>
+            `).join('');
+        }
+
+        function renderContent() {
+            const step = journeySteps[currentStepIndex];
+            contentContainer.style.opacity = 0;
+            contentContainer.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                contentContainer.innerHTML = step.content;
+                contentContainer.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                contentContainer.style.opacity = 1;
+                contentContainer.style.transform = 'translateY(0)';
+            }, 150);
+        }
+
+        window.selectStep = function(index) {
+            currentStepIndex = index;
+            renderNav();
+            renderContent();
+        }
+
+        // --- DISPATCHER CONSOLE LOGIC (GANTT) ---
+        const ganttResources = [
+            { id: 'Alan Reed', util: '79%', role: 'Technician' },
+            { id: 'Gloria Barnes', util: '65%', role: 'Technician' },
+            { id: 'Harry Long', util: '92%', role: 'Senior Tech' },
+            { id: 'Jane Austin', util: '45%', role: 'Contractor' }
+        ];
+
+        // start: hours past 08:00. duration: hours.
+        const ganttAppointments = [
+            { id: 'SA-0606', resource: 'Alan Reed', title: 'Site Inspection', start: 1, duration: 1, status: 'Completed', color: 'bg-emerald-500' }, 
+            { id: 'SA-0585', resource: 'Alan Reed', title: 'Routine Maint.', start: 2.2, duration: 1, status: 'Completed', color: 'bg-emerald-500' },
+            { id: 'SA-0825', resource: 'Alan Reed', title: 'Battery Replacement', start: 6, duration: 1, status: 'Scheduled', color: 'bg-amber-400', isFocus: true },
+            
+            { id: 'SA-0712', resource: 'Gloria Barnes', title: 'Grid Tie Connect', start: 0.5, duration: 2.5, status: 'In Progress', color: 'bg-blue-500' },
+            { id: 'SA-0730', resource: 'Gloria Barnes', title: 'Sensor Check', start: 4, duration: 1.5, status: 'Scheduled', color: 'bg-amber-400' },
+
+            { id: 'SA-0992', resource: 'Harry Long', title: 'Emergency Repair', start: 0, duration: 3.5, status: 'Completed', color: 'bg-emerald-500' },
+            { id: 'SA-0995', resource: 'Harry Long', title: 'Inverter Swap', start: 4.5, duration: 3, status: 'In Progress', color: 'bg-blue-500' },
+
+            { id: 'SA-1020', resource: 'Jane Austin', title: 'Panel Cleaning', start: 1, duration: 4, status: 'In Progress', color: 'bg-blue-500' }
+        ];
+
+        function renderGantt() {
+            const container = document.getElementById('gantt-rows-container');
+            let html = '';
+
+            ganttResources.forEach(res => {
+                // Filter appts for this resource
+                const resAppts = ganttAppointments.filter(a => a.resource === res.id);
+                
+                // Generate Appt HTML
+                let apptsHtml = '';
+                resAppts.forEach(appt => {
+                    const leftPct = (appt.start / 9) * 100;
+                    const widthPct = (appt.duration / 9) * 100;
+                    const focusClass = appt.isFocus ? 'focus-pulse border-2 border-white z-10' : 'border border-black/10';
+                    
+                    apptsHtml += `
+                        <div onclick="openModal('${appt.id}')" 
+                             class="gantt-block absolute top-2 bottom-2 rounded-md shadow-sm text-white text-[10px] font-bold overflow-hidden px-2 py-1 flex flex-col justify-center leading-tight ${appt.color} ${focusClass}"
+                             style="left: ${leftPct}%; width: ${widthPct}%;"
+                             title="${appt.title} (${appt.status})">
+                             <span class="truncate w-full">${appt.title}</span>
+                             <span class="font-normal opacity-80 truncate w-full">${appt.id}</span>
+                        </div>
+                    `;
+                });
+
+                // Row HTML
+                html += `
+                    <div class="flex border-b border-slate-200 hover:bg-slate-50 transition-colors h-16 group">
+                        <div class="w-48 flex-shrink-0 p-3 border-r border-slate-300 flex flex-col justify-center bg-white z-20">
+                            <div class="font-bold text-slate-800 text-sm flex justify-between items-center">
+                                ${res.id} <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono">${res.util}</span>
+                            </div>
+                            <div class="text-xs text-slate-500">${res.role}</div>
+                        </div>
+                        <div class="flex-grow relative gantt-grid">
+                            ${apptsHtml}
+                            
+                            <!-- Current Time Line -->
+                            <div class="absolute top-0 bottom-0 w-px bg-blue-500/50 z-0" style="left: 77.77%;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Modal Logic
+        function openModal(apptId) {
+            const appt = ganttAppointments.find(a => a.id === apptId);
+            if(!appt) return;
+
+            document.getElementById('modal-title').className = `text-white font-bold flex items-center`;
+            document.getElementById('modal-status').className = `text-slate-900 text-xs px-2 py-1 rounded mr-3 uppercase tracking-wider font-extrabold ${appt.color}`;
+            document.getElementById('modal-status').innerText = appt.status;
+            document.getElementById('modal-sa-number').innerText = appt.id;
+            document.getElementById('modal-subject').innerText = appt.title;
+            document.getElementById('modal-resource').innerText = appt.resource;
+            
+            // Calculate fake times
+            const startHour = Math.floor(8 + appt.start);
+            const startMin = Math.round((appt.start % 1) * 60).toString().padStart(2, '0');
+            const endHour = Math.floor(8 + appt.start + appt.duration);
+            const endMin = Math.round(((appt.start + appt.duration) % 1) * 60).toString().padStart(2, '0');
+            
+            document.getElementById('modal-start').innerText = `${startHour}:${startMin}`;
+            document.getElementById('modal-end').innerText = `${endHour}:${endMin}`;
+
+            const modal = document.getElementById('appointment-modal');
+            const content = document.getElementById('modal-content');
+            
+            modal.classList.remove('hidden');
+            // small delay for transition
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('appointment-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200); // match tailwind transition duration if added, or hardcoded delay
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('appointment-modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+
+        // --- CHARTS LOGIC ---
+        function initCharts() {
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748B';
+
+            const ctxPerf = document.getElementById('performanceChart').getContext('2d');
+            new Chart(ctxPerf, {
+                type: 'bar',
+                data: {
+                    labels: ['First-Time Fix', 'CSAT Score', 'Worker Productivity'],
+                    datasets: [{
+                        label: 'Percentage Increase (%)',
+                        data: [31, 32, 35],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.85)', // Emerald
+                            'rgba(14, 165, 233, 0.85)', // Sky Blue
+                            'rgba(99, 102, 241, 0.85)'  // Indigo
+                        ],
+                        borderColor: [
+                            'rgb(5, 150, 105)',
+                            'rgb(2, 132, 199)',
+                            'rgb(79, 70, 229)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 50,
+                            ticks: { callback: function(value) { return value + "%" }, font: { weight: '500' } },
+                            grid: { color: '#E2E8F0', borderDash: [4, 4] }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { weight: '600', color: '#334155' },
+                                callback: function(value) {
+                                    const label = this.getLabelForValue(value);
+                                    if (label.length > 16) { return label.substring(0, 14) + '..'; }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: { size: 14, family: "'Inter', sans-serif" },
+                            bodyFont: { size: 16, weight: 'bold' },
+                            padding: 16,
+                            cornerRadius: 8,
+                            callbacks: { label: function(context) { return `+${context.raw}% Improvement`; } }
+                        }
+                    }
+                }
+            });
+
+            const ctxTravel = document.getElementById('travelChart').getContext('2d');
+            new Chart(ctxTravel, {
+                type: 'bar',
+                data: {
+                    labels: ['Legacy Process', 'SFS AI Routing'],
+                    datasets: [{
+                        label: 'Avg Travel Time (Mins)',
+                        data: [17, 12],
+                        backgroundColor: [
+                            'rgba(148, 163, 184, 0.5)', // Slate
+                            'rgba(59, 130, 246, 0.85)'  // Blue
+                        ],
+                        borderColor: [
+                            'rgb(100, 116, 139)',
+                            'rgb(37, 99, 235)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 25,
+                            title: { display: true, text: 'Minutes per Job', font: { weight: '600' } },
+                            ticks: { font: { weight: '500' } },
+                            grid: { color: '#E2E8F0', borderDash: [4, 4] }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { weight: '600', color: '#334155' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 16, weight: 'bold' },
+                            padding: 16,
+                            cornerRadius: 8,
+                            callbacks: { label: function(context) { return `${context.raw} Minutes`; } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        renderNav();
+        renderContent();
+        renderGantt();
+        setTimeout(initCharts, 100);
+
+    </script>
+</body>
+</html>
