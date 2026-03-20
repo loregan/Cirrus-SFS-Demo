@@ -69,6 +69,12 @@
             100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
 
+        /* Scan Line Animation for VRA */
+        @keyframes scan {
+            0%, 100% { top: 0%; }
+            50% { top: 100%; transform: translateY(-100%); }
+        }
+
         /* Modal Styles */
         #appointment-modal {
             backdrop-filter: blur(4px);
@@ -229,6 +235,9 @@
         <p class="text-sm font-medium tracking-wide">Interactive Prototype &middot; Salesforce Field Service Simulation &middot; Cirrus Renewable Energy</p>
     </footer>
 
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[100] flex flex-col gap-2"></div>
+
     <!-- MODAL FOR DISPATCHER CONSOLE -->
     <div id="appointment-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform scale-95 transition-all" id="modal-content">
@@ -267,10 +276,10 @@
                 <div class="pt-2 border-t border-slate-200">
                     <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2">Dispatcher Actions</div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Edit</button>
-                        <button class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Change Status</button>
-                        <button class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Get Candidates</button>
-                        <button class="bg-blue-600 border border-blue-600 text-white hover:bg-blue-700 py-2 rounded text-sm font-medium transition-colors">View on Map</button>
+                        <button onclick="showToast('Opening Edit panel for ' + document.getElementById('modal-sa-number').innerText, 'info')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Edit</button>
+                        <button onclick="showToast('Opening Status dialogue...', 'info')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Change Status</button>
+                        <button onclick="showToast('Running scheduling optimization to find candidates...', 'success')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Get Candidates</button>
+                        <button onclick="showToast('Loading ' + document.getElementById('modal-sa-number').innerText + ' on territory map...', 'info')" class="bg-blue-600 border border-blue-600 text-white hover:bg-blue-700 py-2 rounded text-sm font-medium transition-colors">View on Map</button>
                     </div>
                 </div>
             </div>
@@ -334,27 +343,50 @@
                     </div>
                     <p class="text-slate-600 mb-6 text-lg">To prevent an unnecessary or under-equipped truck roll, the support agent initiates a live video session with the customer.</p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hover:border-teal-300 transition-colors group">
-                            <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">📱</div>
-                            <h4 class="font-bold text-slate-800 mb-2">Frictionless Connection</h4>
-                            <p class="text-sm text-slate-600">Agent sends a secure SMS link. Lauren clicks and opens her smartphone camera via the mobile browser. Zero app installation required.</p>
+                    <div class="flex flex-col md:flex-row gap-6 mb-6">
+                        <div class="flex-1 space-y-4">
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hover:border-teal-300 transition-colors group">
+                                <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">📱</div>
+                                <h4 class="font-bold text-slate-800 mb-2">Frictionless Connection</h4>
+                                <p class="text-sm text-slate-600">Agent sends a secure SMS link. Lauren clicks and opens her smartphone camera via the mobile browser. Zero app installation required.</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-teal-500 relative overflow-hidden">
+                                <div class="absolute -right-4 -top-4 text-6xl opacity-10">👁️‍🗨️</div>
+                                <h4 class="font-bold text-slate-800 mb-2 flex items-center"><span class="text-xl mr-2">👁️‍🗨️</span> AI OCR Scanning</h4>
+                                <p class="text-sm text-slate-600">The agent freezes the video feed and uses OCR to instantly capture the serial number <code class="bg-slate-100 px-1.5 py-0.5 rounded text-teal-700 font-mono font-bold border border-slate-200">21BZ0206A</code> directly from the housing.</p>
+                            </div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-teal-500 relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 text-6xl opacity-10">👁️‍🗨️</div>
-                            <div class="text-3xl mb-3">👁️‍🗨️</div>
-                            <h4 class="font-bold text-slate-800 mb-2">AI OCR Scanning</h4>
-                            <p class="text-sm text-slate-600">The agent freezes the video feed and uses OCR to instantly capture the serial number <code class="bg-slate-100 px-1.5 py-0.5 rounded text-teal-700 font-mono font-bold border border-slate-200">21BZ0206A</code> directly from the housing.</p>
+                        
+                        <div class="flex-1 flex justify-center items-center bg-slate-100 rounded-xl border border-slate-200 p-4">
+                            <!-- Phone Mockup simulating a live VRA camera/GIF -->
+                            <div class="w-[200px] h-[380px] bg-slate-800 rounded-[2rem] border-[6px] border-slate-800 relative overflow-hidden shadow-xl">
+                                <!-- Phone Notch -->
+                                <div class="absolute top-0 inset-x-0 h-4 bg-slate-800 z-20 rounded-b-xl w-1/2 mx-auto"></div>
+                                <!-- Camera View Background (Turbine) -->
+                                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=400&q=80')] bg-cover bg-center"></div>
+                                <!-- UI Overlay -->
+                                <div class="absolute inset-0 z-10 flex flex-col justify-between p-4 bg-black/20">
+                                    <div class="text-white flex justify-between items-center text-[10px] font-bold mt-2">
+                                        <span class="bg-red-500/90 px-2 py-0.5 rounded animate-pulse flex items-center"><span class="w-1.5 h-1.5 bg-white rounded-full mr-1"></span> LIVE</span>
+                                        <span class="bg-black/50 px-2 py-0.5 rounded">VRA</span>
+                                    </div>
+                                    <div class="relative w-full h-32 border-2 border-teal-400/80 rounded-lg bg-teal-400/10 mb-8 overflow-hidden shadow-[inset_0_0_10px_rgba(45,212,191,0.2)]">
+                                        <!-- CSS Scan Line -->
+                                        <div class="w-full h-1 bg-teal-400 shadow-[0_0_10px_3px_rgba(45,212,191,0.9)] absolute top-0 left-0 animate-[scan_2s_ease-in-out_infinite]"></div>
+                                        <div class="absolute bottom-1 right-1 text-[9px] text-teal-300 font-mono bg-black/60 px-1 rounded border border-teal-500/30">21BZ0206A</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="bg-[#0F172A] text-white p-5 rounded-xl flex items-center justify-between mt-auto shadow-md">
+                    <div class="bg-[#0F172A] text-white p-4 rounded-xl flex items-center justify-between mt-auto shadow-md">
                         <div>
                             <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-1">Diagnostic Outcome</div>
-                            <div class="text-lg font-bold text-emerald-400 flex items-center">Battery Replacement Confirmed</div>
+                            <div class="text-base font-bold text-emerald-400 flex items-center">Battery Replacement Confirmed</div>
                         </div>
-                        <div class="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/50">
-                            <span class="text-emerald-400 font-bold text-xl">✓</span>
+                        <div class="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/50">
+                            <span class="text-emerald-400 font-bold">✓</span>
                         </div>
                     </div>
                 `
@@ -695,6 +727,29 @@
             }
         }
 
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-emerald-600' : 'bg-blue-600';
+            const icon = type === 'success' ? '✅' : 'ℹ️';
+            
+            toast.className = `${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center transform transition-all duration-300 translate-y-10 opacity-0 min-w-[300px] border border-white/20`;
+            toast.innerHTML = `<span class="mr-3 text-lg">${icon}</span> <span class="text-sm font-medium">${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            });
+            
+            // Animate out and remove
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
         // --- CHARTS LOGIC ---
         function initCharts() {
