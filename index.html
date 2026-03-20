@@ -248,7 +248,9 @@
                 </h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold leading-none">&times;</button>
             </div>
-            <div class="p-6 space-y-4">
+            
+            <!-- DEFAULT VIEW: Details & Actions -->
+            <div class="p-6 space-y-4" id="modal-view-default">
                 <div>
                     <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Subject</div>
                     <div class="text-lg font-bold text-slate-800" id="modal-subject">Battery Replacement</div>
@@ -278,11 +280,58 @@
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="showToast('Opening Edit panel for ' + document.getElementById('modal-sa-number').innerText, 'info')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Edit</button>
                         <button onclick="showToast('Opening Status dialogue...', 'info')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Change Status</button>
-                        <button onclick="showToast('Running scheduling optimization to find candidates...', 'success')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Get Candidates</button>
-                        <button onclick="showToast('Loading ' + document.getElementById('modal-sa-number').innerText + ' on territory map...', 'info')" class="bg-blue-600 border border-blue-600 text-white hover:bg-blue-700 py-2 rounded text-sm font-medium transition-colors">View on Map</button>
+                        <button onclick="showCandidates()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2 rounded text-sm font-medium transition-colors">Get Candidates</button>
+                        <button onclick="showMap()" class="bg-blue-600 border border-blue-600 text-white hover:bg-blue-700 py-2 rounded text-sm font-medium transition-colors flex items-center justify-center"><span class="mr-2">🗺️</span> View on Map</button>
                     </div>
                 </div>
             </div>
+
+            <!-- VIEW: Candidates List -->
+            <div class="p-6 hidden" id="modal-view-candidates">
+                <button onclick="showDefaultModalView()" class="mb-4 text-blue-600 font-bold text-sm flex items-center hover:underline hover:text-blue-800 transition"><span class="mr-1">←</span> Back to Details</button>
+                <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-3">Available Candidates</div>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center bg-emerald-50 p-3 rounded-lg border border-emerald-200 shadow-sm">
+                        <div>
+                            <div class="font-bold text-slate-800 text-sm">Harry Long</div>
+                            <div class="text-[11px] text-slate-600 mt-0.5">Grade: <span class="font-bold text-emerald-600">98/100</span> &middot; 12 mins travel</div>
+                        </div>
+                        <button onclick="showToast('Reassigning to Harry Long...', 'success'); closeModal()" class="bg-emerald-600 text-white px-3 py-1.5 rounded shadow hover:bg-emerald-700 text-xs font-bold transition-colors">Schedule</button>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div>
+                            <div class="font-bold text-slate-800 text-sm">Gloria Barnes</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">Grade: <span class="font-bold text-blue-600">75/100</span> &middot; 25 mins travel</div>
+                        </div>
+                        <button onclick="showToast('Reassigning to Gloria Barnes...', 'success'); closeModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded shadow hover:bg-blue-700 text-xs font-bold transition-colors">Schedule</button>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 opacity-60">
+                        <div>
+                            <div class="font-bold text-slate-800 text-sm">Jane Austin</div>
+                            <div class="text-[11px] text-rose-500 font-bold mt-0.5">Grade: 40/100 &middot; Missing Skills</div>
+                        </div>
+                        <button class="bg-slate-300 text-slate-500 px-3 py-1.5 rounded cursor-not-allowed text-xs font-bold">Schedule</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: Map -->
+            <div class="p-6 hidden" id="modal-view-map">
+                <button onclick="showDefaultModalView()" class="mb-4 text-blue-600 font-bold text-sm flex items-center hover:underline hover:text-blue-800 transition"><span class="mr-1">←</span> Back to Details</button>
+                <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-3">Territory Map: Dublin</div>
+                
+                <div class="w-full h-64 bg-slate-200 rounded-lg overflow-hidden border border-slate-300 relative shadow-inner">
+                    <!-- Embedded OpenStreetMap roughly centered on Dublin area -->
+                    <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=-6.38,53.25,-6.12,53.45&layer=mapnik&marker=53.3498,-6.2603"></iframe>
+                    <div class="absolute bottom-2 left-2 bg-white/95 px-2 py-1 text-[10px] font-bold rounded shadow-md border border-slate-200 text-slate-700 flex items-center">
+                        <span class="mr-1 text-base">📍</span> Appointment Location
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -675,10 +724,30 @@
             container.innerHTML = html;
         }
 
-        // Modal Logic
+        // Modal Logic & Views
+        function showDefaultModalView() {
+            document.getElementById('modal-view-default').classList.remove('hidden');
+            document.getElementById('modal-view-map').classList.add('hidden');
+            document.getElementById('modal-view-candidates').classList.add('hidden');
+        }
+
+        function showMap() {
+            document.getElementById('modal-view-default').classList.add('hidden');
+            document.getElementById('modal-view-map').classList.remove('hidden');
+            document.getElementById('modal-view-candidates').classList.add('hidden');
+        }
+
+        function showCandidates() {
+            document.getElementById('modal-view-default').classList.add('hidden');
+            document.getElementById('modal-view-map').classList.add('hidden');
+            document.getElementById('modal-view-candidates').classList.remove('hidden');
+        }
+
         function openModal(apptId) {
             const appt = ganttAppointments.find(a => a.id === apptId);
             if(!appt) return;
+
+            showDefaultModalView(); // Reset state
 
             document.getElementById('modal-title').className = `text-white font-bold flex items-center`;
             document.getElementById('modal-status').className = `text-slate-900 text-xs px-2 py-1 rounded mr-3 uppercase tracking-wider font-extrabold ${appt.color}`;
